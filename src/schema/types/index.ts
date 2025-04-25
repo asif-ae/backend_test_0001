@@ -4,6 +4,7 @@ import { NodeObjectType } from "./nodeObject";
 import { ResourceTemplateType } from "./resourceTemplate";
 import { ResponseType } from "./response";
 import { TriggerType } from "./trigger";
+import { UserTypeDefs } from "./user";
 
 export const typeDefs = gql`
   scalar JSON
@@ -14,6 +15,7 @@ export const typeDefs = gql`
   ${ResponseType}
   ${ResourceTemplateType}
   ${NodeObjectType}
+  ${UserTypeDefs}
 
   type Query {
     node(nodeId: ID!): NodeObject

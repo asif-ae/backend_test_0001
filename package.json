@@ -4,9 +4,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "node --es-module-specifier-resolution=node dist/index.js",
-    "dev": "node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsup src/index.ts --format esm",
+    "dev": "tsup src/index.ts --watch --format esm --onSuccess \"node dist/index.js\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -19,11 +19,12 @@
     "graphql": "^16.10.0",
     "graphql-scalars": "^1.24.2",
     "graphql-tag": "^2.12.6",
-    "graphql-type-json": "^0.3.2"
+    "graphql-type-json": "^0.3.2",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "@types/node": "^22.14.1",
-    "ts-node": "^10.9.2",
+    "@types/jsonwebtoken": "^9.0.9",
+    "tsup": "^8.4.0",
     "typescript": "^5.8.3"
   }
 }
