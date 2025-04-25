@@ -114,6 +114,34 @@ For a production or compiled run (not typically needed for the code test, but fo
 
 ---
 
+## 🚀 Running the Server (Production Mode)
+
+To run the server in production:
+
+### 1. **Build the Project**
+
+```bash
+npm run build
+```
+
+This compiles the TypeScript code to JavaScript in the `dist/` folder using `tsup`.
+
+---
+
+### 2. **Start the Server**
+
+```bash
+npm start
+```
+
+This runs the compiled app from `dist/index.js`. You’ll see:
+
+```
+🚀 Server ready at http://localhost:4000/
+```
+
+---
+
 ## Example `curl` Commands
 
 ```bash
