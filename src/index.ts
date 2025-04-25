@@ -1,26 +1,29 @@
-import { ApolloServer } from "@apollo/server";
-import { startStandaloneServer } from "@apollo/server/standalone";
-import { typeDefs } from "./schema.js";
-import { resolvers } from "./resolvers.js";
-import dotenv from "dotenv";
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
+const typeDefs = `#graphql
+  type Query {
+    hello: String
+  }
+`;
 
-const { url } = await startStandaloneServer(server, {
-  listen: { port: 4000 },
-  context: async ({ req }) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    if (token !== process.env.AUTH_TOKEN) {
-      throw new Error("Unauthorized");
-    }
-    return {};
+const resolvers = {
+  Query: {
+    hello: () => 'Hello GraphQL World!',
   },
-});
+};
 
-console.log(`🚀 Server ready at ${url}`);
-console.log(`🚀 Auth token: ${process.env.AUTH_TOKEN}`);
+async function startServer() {
+  const server = new ApolloServer({ typeDefs, resolvers });
+
+  const { url } = await startStandaloneServer(server, {
+    listen: { port: Number(process.env.PORT) || 4000 },
+  });
+
+  console.log(`🚀 Server ready at ${url}`);
+}
+
+startServer();
