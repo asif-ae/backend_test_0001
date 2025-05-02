@@ -1,41 +1,71 @@
-import { ApolloServer } from '@apollo/server';
+import { ApolloServer, BaseContext } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import { typeDefs } from './schema/types/index.js';
-import { resolvers } from './schema/resolvers/index.js';
-import dotenv from 'dotenv';
-import { verifyToken } from './utils/auth.js';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { resolvers } from './resolvers';
+import { GraphQLError } from 'graphql';
 
-dotenv.config();
+// Load GraphQL schema with error handling
+const schemaPath = join(__dirname, '../src/schema/typeDefs.graphql');
+console.log('Attempting to load schema from:', schemaPath);
+let typeDefs: string;
+try {
+  typeDefs = readFileSync(schemaPath, 'utf8');
+  console.log('Schema loaded successfully');
+} catch (error) {
+  console.error('Failed to load schema:', error);
+  throw error;
+}
 
-const server = new ApolloServer({
+// Authentication context
+const VALID_TOKEN = 'test-token';
+
+interface AuthContext extends BaseContext {
+  token?: string;
+}
+
+const context = async ({ req }: { req: any }): Promise<AuthContext> => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  
+  if (!token || token !== VALID_TOKEN) {
+    throw new GraphQLError('Invalid or missing Bearer token', {
+      extensions: {
+        code: 'UNAUTHENTICATED',
+        http: { status: 401 },
+      },
+    });
+  }
+
+  return { token };
+};
+
+// Initialize Apollo Server
+console.log('Initializing Apollo Server with introspection enabled...');
+const server = new ApolloServer<AuthContext>({
   typeDefs,
   resolvers,
-  introspection: process.env.NODE_ENV !== 'production',
+  plugins: [],
+  introspection: true,
 });
 
-const { url } = await startStandaloneServer(server, {
-  listen: { port: Number(process.env.PORT) || 4000 },
-  context: async ({ req }: { req: any }) => {
-    const op = req.body?.operationName;
-    const query = req.body?.query || '';
-  
-    const isLoginMutation = query.includes('mutation') && query.includes('login');
-  
-    const isPublic = op === 'IntrospectionQuery' || op === 'login' || isLoginMutation;
-  
-    if (isPublic) {
-      return {};
-    }
-  
-    const authHeader = req.headers.authorization;
-    if (!authHeader) throw new Error('Authorization header missing');
-  
-    const token = authHeader.replace('Bearer ', '');
-    const user = verifyToken(token);
-  
-    return { user };
+// Start the server
+async function startServer(): Promise<void> {
+  console.log('Starting standalone server...');
+  try {
+    const { url } = await startStandaloneServer(server, {
+      context: async ({ req }) => context({ req }),
+      listen: { port: 4000 },
+    });
+    console.log(`🚀 Server ready at ${url}`);
+    console.log(`Use Bearer token: ${VALID_TOKEN}`);
+  } catch (error) {
+    console.error('Server startup failed:', error);
+    throw error;
   }
-  
-});
+}
 
-console.log(`🚀 Server ready at ${url}`);
+startServer().catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});
